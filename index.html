@@ -11,33 +11,11 @@
   </head>
   <body data-theme="dark">
     <div class="app-shell">
-      <aside class="sidebar" aria-label="Навигация">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true">ЦК</span>
-          <span class="brand-copy"><strong>ЦентрКонсалт</strong><small>Отдел продаж</small></span>
-        </div>
-
-        <div class="sidebar-group-label">Рабочее пространство</div>
-        <nav class="navigation" aria-label="Разделы">
-          <button class="nav-item is-current" type="button" data-view-button="devices" aria-current="page">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 10h17M9 10v10"/></svg>
-            <span>Устройства и заявки</span>
-          </button>
-          <button class="nav-item" type="button" data-view-button="visitor">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-            <span>Экран посетителя</span>
-          </button>
-        </nav>
-
-        <div class="sidebar-bottom">
-          <button id="resetChanges" class="text-button" type="button">Сбросить изменения</button>
-        </div>
-      </aside>
-
       <div class="main-area">
         <header class="topbar">
-          <div class="topbar-path">Отдел продаж <span>/</span> <strong id="currentSection">Устройства и заявки</strong></div>
+          <div class="brand"><span class="brand-mark" aria-hidden="true">ЦК</span><span class="brand-copy"><strong>ЦентрКонсалт</strong><small>Отдел продаж</small></span></div>
           <div class="topbar-actions">
+            <button id="resetChanges" class="text-button" type="button">Сбросить изменения</button>
             <button id="themeToggle" class="theme-button" type="button" aria-label="Включить светлую тему" aria-pressed="false">
               <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg>
               <span id="themeLabel">Светлая тема</span>
@@ -46,16 +24,12 @@
         </header>
 
         <main>
-          <section id="devicesView" class="view page-content" aria-labelledby="devicesTitle">
+          <section id="devicesView" class="page-content" aria-labelledby="devicesTitle">
             <div class="page-heading">
               <div>
-                <p class="eyebrow">Контроль заявок</p>
-                <h1 id="devicesTitle">Устройства и заявки</h1>
-                <p class="page-subtitle">Проверьте историю обращений, прежде чем ограничить устройство.</p>
+                <h1 id="devicesTitle">Контроль заявок</h1>
               </div>
             </div>
-
-            <div class="stats-grid" id="statsGrid" aria-label="Сводка"></div>
 
             <div class="workspace-grid">
               <section class="panel list-panel" aria-labelledby="listTitle">
@@ -88,45 +62,6 @@
             </div>
           </section>
 
-          <section id="visitorView" class="view page-content" aria-labelledby="visitorTitle" hidden>
-            <div class="page-heading visitor-heading">
-              <div><p class="eyebrow">Сценарий блокировки</p><h1 id="visitorTitle">Что увидит посетитель</h1><p class="page-subtitle">После попытки отправить заявку открывается окно с предупреждением и формой сообщения.</p></div>
-            </div>
-            <div class="preview-layout">
-              <div class="preview-context panel">
-                <span class="preview-tag">Экран посетителя</span>
-                <h2>Понятное предупреждение вместо молчаливого отказа</h2>
-                <p>Если устройство заблокировано, запрос на звонок не принимается. Посетитель может написать сообщение, чтобы сотрудник разобрался в ситуации.</p>
-                <div class="preview-flow"><span>1 <b>Проверка устройства</b></span><span>2 <b>Предупреждение</b></span><span>3 <b>Сообщение клиента</b></span></div>
-              </div>
-              <div class="site-preview" aria-label="Форма для заблокированного посетителя">
-                <div class="site-page-underlay" id="sitePageUnderlay" aria-hidden="true">
-                  <p class="site-page-eyebrow">Бесплатная консультация</p>
-                  <h2>Оставьте номер телефона,<br />и мы вам перезвоним</h2>
-                  <div class="site-page-input">+7 (___) ___-__-__</div>
-                  <button id="tryRequest" class="site-page-submit" type="button" tabindex="-1">Заказать звонок</button>
-                </div>
-                <div class="site-preview-overlay" id="visitorOverlay">
-                  <div class="site-modal" role="group" aria-label="Предупреждение о блокировке">
-                    <button id="closeVisitorModal" class="site-modal-close" type="button" aria-label="Закрыть окно"></button>
-                    <p class="site-modal-kicker">Запрос на обратный звонок</p>
-                    <h2>Заявка на звонок не отправлена</h2>
-                    <p class="site-modal-warning">Мы заметили подозрительную активность с вашего устройства и временно ограничили отправку заявок.</p>
-                    <p class="site-modal-intro">Если это ошибка, оставьте сообщение. Сотрудник сможет разобраться и связаться с вами.</p>
-                    <form id="visitorForm" class="visitor-form">
-                      <label class="visually-hidden" for="visitorContact">Телефон или email</label>
-                      <input id="visitorContact" name="contact" type="text" autocomplete="off" placeholder="Телефон или email" required />
-                      <label class="visually-hidden" for="visitorMessage">Сообщение</label>
-                      <textarea id="visitorMessage" name="message" rows="3" placeholder="Ваше сообщение" required></textarea>
-                      <label class="visitor-consent"><input id="visitorConsent" type="checkbox" checked required /><span class="visitor-consent-box" aria-hidden="true"></span><span>Даю согласие на обработку персональных данных</span></label>
-                      <button class="visitor-submit" type="submit">Отправить сообщение</button>
-                      <div id="visitorFormFeedback" class="form-feedback" role="status" hidden></div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
         </main>
       </div>
     </div>

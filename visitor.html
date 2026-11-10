@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Сообщение для посетителя при ограничении отправки заявки." />
+    <title>Запрос на звонок — ЦентрКонсалт</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./visitor.js" defer></script>
+  </head>
+  <body class="visitor-page">
+    <main class="site-preview" aria-label="Форма для заблокированного посетителя">
+      <div class="site-page-underlay" id="sitePageUnderlay" aria-hidden="true">
+        <p class="site-page-eyebrow">Бесплатная консультация</p>
+        <h1>Оставьте номер телефона,<br />и мы вам перезвоним</h1>
+        <div class="site-page-input">+7 (___) ___-__-__</div>
+        <button id="tryRequest" class="site-page-submit" type="button" tabindex="-1">Заказать звонок</button>
+      </div>
+      <div class="site-preview-overlay" id="visitorOverlay">
+        <div class="site-modal" role="dialog" aria-modal="true" aria-labelledby="visitorModalTitle" aria-describedby="visitorModalDescription">
+          <button id="closeVisitorModal" class="site-modal-close" type="button" aria-label="Закрыть окно"></button>
+          <p class="site-modal-kicker">Запрос на обратный звонок</p>
+          <h2 id="visitorModalTitle">Заявка на звонок не отправлена</h2>
+          <p class="site-modal-warning" id="visitorModalDescription">Мы заметили подозрительную активность с вашего устройства и временно ограничили отправку заявок.</p>
+          <p class="site-modal-intro">Если это ошибка, оставьте сообщение. Сотрудник сможет разобраться и связаться с вами.</p>
+          <form id="visitorForm" class="visitor-form">
+            <label class="visually-hidden" for="visitorContact">Телефон или email</label>
+            <input id="visitorContact" name="contact" type="text" autocomplete="off" placeholder="Телефон или email" required />
+            <label class="visually-hidden" for="visitorMessage">Сообщение</label>
+            <textarea id="visitorMessage" name="message" rows="3" placeholder="Ваше сообщение" required></textarea>
+            <label class="visitor-consent"><input id="visitorConsent" type="checkbox" checked required /><span class="visitor-consent-box" aria-hidden="true"></span><span>Даю согласие на обработку персональных данных</span></label>
+            <button class="visitor-submit" type="submit">Отправить сообщение</button>
+            <div id="visitorFormFeedback" class="form-feedback" role="status" hidden></div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

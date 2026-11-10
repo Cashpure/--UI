@@ -162,7 +162,6 @@ function loadOverrides() {
 let overrides = loadOverrides();
 let selectedId = INITIAL_DEVICES[0].id;
 let currentFilter = "all";
-let currentView = "devices";
 let pendingAction = null;
 let modalReturnFocus = null;
 let toastTimer;
@@ -201,17 +200,6 @@ function filteredDevices() {
   });
 }
 
-function renderStats(devices) {
-  const events = devices.reduce((total, device) => total + device.events.length, 0);
-  const blocked = devices.filter((device) => device.status === "blocked").length;
-  const items = [
-    ["Устройств", devices.length, "в списке", '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/>'],
-    ["Обращений", events, "запросов", '<path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/>'],
-    ["Заблокировано", blocked, "устройств", '<path d="M12 3 4 6v5c0 5 3.4 8 8 10 4.6-2 8-5 8-10V6zM9 12l2 2 4-4"/>']
-  ];
-  $("#statsGrid").innerHTML = items.map(([label, value, hint, icon]) => `<div class="stat-card"><div class="stat-top"><span>${label}</span><span class="stat-icon"><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg></span></div><strong>${value}<span class="stat-hint">${hint}</span></strong></div>`).join("");
-}
-
 function renderRows(devices) {
   const tbody = $("#deviceRows");
   tbody.innerHTML = devices.map((device) => {
@@ -233,7 +221,7 @@ function renderRows(devices) {
 function renderDetail(device) {
   const container = $("#deviceDetail");
   if (!device) {
-    container.innerHTML = '<div class="detail-block"><h2>Устройство не выбрано</h2><p class="detail-explain">Выберите устройство в списке или измените фильтр.</p></div>';
+    container.innerHTML = '<div class="detail-empty"><h2>Устройство не выбрано</h2><p>Выберите устройство в списке или измените фильтр.</p></div>';
     return;
   }
   const blocked = device.status === "blocked";
@@ -242,7 +230,7 @@ function renderDetail(device) {
     const next = timeline[index + 1];
     const rejected = item.kind === "request" && item.result === "blocked";
     const itemClass = item.kind === "block" ? "is-block-event" : item.kind === "unblock" ? "is-unblock-event" : rejected ? "is-rejected" : "";
-    const lineClass = next && (next.kind === "block" || item.kind === "block" || rejected) ? "line-red" : next && item.kind === "unblock" ? "line-green" : "";
+    const lineClass = next && (next.kind === "block" || next.kind === "unblock") ? "line-break" : next && (item.kind === "block" || rejected) ? "line-red" : next && item.kind === "unblock" ? "line-green" : "";
     if (item.kind !== "request") {
       return `<div class="history-item ${itemClass} ${lineClass}">
         <div class="history-item-top"><strong>${item.kind === "block" ? "Устройство заблокировано" : "Устройство разблокировано"}</strong><time datetime="${escapeHTML(item.at)}">${formatDate(item.at)}</time></div>
@@ -259,14 +247,11 @@ function renderDetail(device) {
     </div>`;
   }).join("");
   container.innerHTML = `<div class="detail-header"><h2>Устройство</h2><span class="status ${device.status}">${blocked ? "Заблокировано" : "Активно"}</span></div>
-    <div class="detail-summary">
-      <div class="detail-block"><span class="detail-label">Цифровой слепок устройства</span><div class="detail-fingerprint"><code>${escapeHTML(device.fingerprint)}</code><button class="copy-button" type="button" data-copy-fingerprint="${escapeHTML(device.fingerprint)}" aria-label="Скопировать слепок">Копировать</button></div><p class="detail-explain">Используйте слепок, чтобы проверить историю обращений устройства. IP-адрес не служит основанием для блокировки.</p>
-        <div class="detail-meta"><div><span class="detail-label">Обращений</span><strong>${device.events.length}</strong></div><div><span class="detail-label">Последнее</span><strong>${formatDate(device.events[0].at)}</strong></div></div>
-        ${blocked ? `<div class="block-reason"><strong>Причина: ${escapeHTML(device.blockReason || "Подозрительная активность")}</strong>${device.blockComment ? `<p>${escapeHTML(device.blockComment)}</p>` : ""}${device.blockedAt ? `<small>Заблокировано ${formatDate(device.blockedAt)}</small>` : ""}</div>` : ""}
-      </div>
-      <div class="detail-actions"><button class="${blocked ? "primary-button" : "secondary-button block"} action-button" type="button" data-action="${blocked ? "unblock" : "block"}">${blocked ? "Разблокировать устройство" : "Заблокировать устройство"}</button><p class="action-hint">${blocked ? "Устройство снова получит статус «Активно»." : "Перед блокировкой проверьте номера и историю заявок."}</p></div>
+    <div class="detail-controls">
+      <div class="detail-identity"><span class="detail-label">Цифровой слепок</span><div class="detail-fingerprint"><code>${escapeHTML(device.fingerprint)}</code><button class="copy-button" type="button" data-copy-fingerprint="${escapeHTML(device.fingerprint)}" aria-label="Скопировать слепок">Копировать</button></div></div>
+      <div class="detail-actions"><button class="${blocked ? "primary-button" : "secondary-button block"} action-button" type="button" data-action="${blocked ? "unblock" : "block"}">${blocked ? "Разблокировать устройство" : "Заблокировать устройство"}</button></div>
     </div>
-    <div class="detail-block detail-history"><div class="history-heading"><h3>История устройства</h3><span>${timeline.length} ${pluralize(timeline.length, "событие", "события", "событий")}</span></div><p class="history-order">Сначала ранние события</p><div class="history-list">${history}</div></div>`;
+    <div class="detail-history"><div class="history-heading"><h3>История устройства</h3><span>${timeline.length} ${pluralize(timeline.length, "событие", "события", "событий")}</span></div><p class="history-order">Сначала ранние события</p><div class="history-list">${history}</div></div>`;
 }
 
 function pluralize(number, one, few, many) {
@@ -276,25 +261,10 @@ function pluralize(number, one, few, many) {
 }
 
 function render() {
-  const all = getDevices();
   const visible = filteredDevices();
   if (!visible.some((device) => device.id === selectedId)) selectedId = visible[0]?.id || null;
-  renderStats(all);
   renderRows(visible);
   renderDetail(visible.find((device) => device.id === selectedId));
-}
-
-function setView(view) {
-  currentView = view;
-  $("#devicesView").hidden = view !== "devices";
-  $("#visitorView").hidden = view !== "visitor";
-  $("#currentSection").textContent = view === "devices" ? "Устройства и заявки" : "Экран посетителя";
-  $$("[data-view-button]").forEach((button) => {
-    const current = button.dataset.viewButton === view;
-    button.classList.toggle("is-current", current);
-    if (current) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current");
-  });
-  window.scrollTo({ top: 0, behavior: "instant" });
 }
 
 function setTheme(theme) {
@@ -394,7 +364,6 @@ async function copyFingerprint(value) {
   }
 }
 
-$$("[data-view-button]").forEach((button) => button.addEventListener("click", () => setView(button.dataset.viewButton)));
 $("#themeToggle").addEventListener("click", () => setTheme(document.body.dataset.theme === "dark" ? "light" : "dark"));
 $("#resetChanges").addEventListener("click", () => { overrides = {}; removeStorage(STORAGE_KEY); currentFilter = "all"; $("#deviceSearch").value = ""; selectedId = INITIAL_DEVICES[0].id; $$("[data-filter]").forEach((button) => { const active = button.dataset.filter === "all"; button.classList.toggle("is-active", active); button.setAttribute("aria-pressed", String(active)); }); render(); showToast("Исходные статусы восстановлены"); });
 $$("[data-filter]").forEach((button) => button.addEventListener("click", () => { currentFilter = button.dataset.filter; $$("[data-filter]").forEach((item) => { const active = item === button; item.classList.toggle("is-active", active); item.setAttribute("aria-pressed", String(active)); }); render(); }));
@@ -406,15 +375,5 @@ $("#cancelAction").addEventListener("click", closeModal);
 $("#modalBackdrop").addEventListener("click", (event) => { if (event.target.id === "modalBackdrop") closeModal(); });
 $("#actionForm").addEventListener("submit", applyAction);
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !$("#modalBackdrop").hidden) closeModal(); });
-function setVisitorOverlay(open) {
-  $("#visitorOverlay").hidden = !open;
-  $("#sitePageUnderlay").setAttribute("aria-hidden", String(open));
-  $("#tryRequest").tabIndex = open ? -1 : 0;
-  (open ? $("#closeVisitorModal") : $("#tryRequest")).focus();
-}
-$("#closeVisitorModal").addEventListener("click", () => setVisitorOverlay(false));
-$("#tryRequest").addEventListener("click", () => setVisitorOverlay(true));
-$("#visitorForm").addEventListener("submit", (event) => { event.preventDefault(); $("#visitorFormFeedback").hidden = false; $("#visitorFormFeedback").textContent = "Спасибо за обращение. Мы разберёмся в ситуации и свяжемся с вами."; $("#visitorForm").reset(); });
-
 setTheme(readStorage(THEME_KEY) === "light" ? "light" : "dark");
 render();
