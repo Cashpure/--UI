@@ -90,30 +90,39 @@
 
           <section id="visitorView" class="view page-content" aria-labelledby="visitorTitle" hidden>
             <div class="page-heading visitor-heading">
-              <div><p class="eyebrow">Сценарий блокировки</p><h1 id="visitorTitle">Что увидит посетитель</h1><p class="page-subtitle">Предупреждение и форма обращения для посетителя.</p></div>
+              <div><p class="eyebrow">Сценарий блокировки</p><h1 id="visitorTitle">Что увидит посетитель</h1><p class="page-subtitle">После попытки отправить заявку открывается окно с предупреждением и формой сообщения.</p></div>
             </div>
             <div class="preview-layout">
               <div class="preview-context panel">
                 <span class="preview-tag">Экран посетителя</span>
                 <h2>Понятное предупреждение вместо молчаливого отказа</h2>
-                <p>При блокировке посетитель видит причину отказа и может оставить сообщение, если ограничение сработало по ошибке.</p>
+                <p>Если устройство заблокировано, запрос на звонок не принимается. Посетитель может написать сообщение, чтобы сотрудник разобрался в ситуации.</p>
                 <div class="preview-flow"><span>1 <b>Проверка устройства</b></span><span>2 <b>Предупреждение</b></span><span>3 <b>Сообщение клиента</b></span></div>
               </div>
-              <div class="site-preview" aria-label="Страница для заблокированного посетителя">
-                <div class="site-preview-header"><img class="site-preview-logo" src="./assets/ck_logotype_new.svg" alt="ЦентрКонсалт" width="260" height="38" /><span>Консультации для бизнеса</span></div>
-                <div class="site-preview-content">
-                  <div class="warning-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 17h.01"/><path d="M10.3 3.9a2 2 0 0 1 3.4 0l7.8 13.3a2 2 0 0 1-1.7 3H4.2a2 2 0 0 1-1.7-3z"/></svg></div>
-                  <p class="preview-kicker">Запрос на обратный звонок</p>
-                  <h2>Заявка на звонок не отправлена</h2>
-                  <p class="warning-copy">Мы заметили подозрительную активность с вашего устройства и временно ограничили отправку заявок. Если это ошибка, напишите нам — сотрудник сможет разобраться в ситуации.</p>
-                  <form id="visitorForm" class="visitor-form">
-                    <h3>Написать сообщение</h3>
-                    <p>Расскажите, как с вами связаться и что произошло.</p>
-                    <label>Как с вами связаться<input id="visitorContact" name="contact" type="text" autocomplete="off" placeholder="Телефон или email" required /></label>
-                    <label>Сообщение<textarea id="visitorMessage" name="message" rows="4" placeholder="Опишите ваш вопрос" required></textarea></label>
-                    <button class="primary-button visitor-submit" type="submit">Отправить сообщение <span aria-hidden="true">↗</span></button>
-                    <div id="visitorFormFeedback" class="form-feedback" role="status" hidden></div>
-                  </form>
+              <div class="site-preview" aria-label="Форма для заблокированного посетителя">
+                <div class="site-page-underlay" id="sitePageUnderlay" aria-hidden="true">
+                  <p class="site-page-eyebrow">Бесплатная консультация</p>
+                  <h2>Оставьте номер телефона,<br />и мы вам перезвоним</h2>
+                  <div class="site-page-input">+7 (___) ___-__-__</div>
+                  <button id="tryRequest" class="site-page-submit" type="button" tabindex="-1">Заказать звонок</button>
+                </div>
+                <div class="site-preview-overlay" id="visitorOverlay">
+                  <div class="site-modal" role="group" aria-label="Предупреждение о блокировке">
+                    <button id="closeVisitorModal" class="site-modal-close" type="button" aria-label="Закрыть окно"></button>
+                    <p class="site-modal-kicker">Запрос на обратный звонок</p>
+                    <h2>Заявка на звонок не отправлена</h2>
+                    <p class="site-modal-warning">Мы заметили подозрительную активность с вашего устройства и временно ограничили отправку заявок.</p>
+                    <p class="site-modal-intro">Если это ошибка, оставьте сообщение. Сотрудник сможет разобраться и связаться с вами.</p>
+                    <form id="visitorForm" class="visitor-form">
+                      <label class="visually-hidden" for="visitorContact">Телефон или email</label>
+                      <input id="visitorContact" name="contact" type="text" autocomplete="off" placeholder="Телефон или email" required />
+                      <label class="visually-hidden" for="visitorMessage">Сообщение</label>
+                      <textarea id="visitorMessage" name="message" rows="3" placeholder="Ваше сообщение" required></textarea>
+                      <label class="visitor-consent"><input id="visitorConsent" type="checkbox" checked required /><span class="visitor-consent-box" aria-hidden="true"></span><span>Даю согласие на обработку персональных данных</span></label>
+                      <button class="visitor-submit" type="submit">Отправить сообщение</button>
+                      <div id="visitorFormFeedback" class="form-feedback" role="status" hidden></div>
+                    </form>
+                  </div>
                 </div>
               </div>
             </div>

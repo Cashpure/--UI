@@ -290,6 +290,14 @@ $("#cancelAction").addEventListener("click", closeModal);
 $("#modalBackdrop").addEventListener("click", (event) => { if (event.target.id === "modalBackdrop") closeModal(); });
 $("#actionForm").addEventListener("submit", applyAction);
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !$("#modalBackdrop").hidden) closeModal(); });
+function setVisitorOverlay(open) {
+  $("#visitorOverlay").hidden = !open;
+  $("#sitePageUnderlay").setAttribute("aria-hidden", String(open));
+  $("#tryRequest").tabIndex = open ? -1 : 0;
+  (open ? $("#closeVisitorModal") : $("#tryRequest")).focus();
+}
+$("#closeVisitorModal").addEventListener("click", () => setVisitorOverlay(false));
+$("#tryRequest").addEventListener("click", () => setVisitorOverlay(true));
 $("#visitorForm").addEventListener("submit", (event) => { event.preventDefault(); $("#visitorFormFeedback").hidden = false; $("#visitorFormFeedback").textContent = "Спасибо за обращение. Мы разберёмся в ситуации и свяжемся с вами."; $("#visitorForm").reset(); });
 
 setTheme(readStorage(THEME_KEY) === "light" ? "light" : "dark");
