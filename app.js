@@ -1,65 +1,112 @@
 "use strict";
 
+const SITE_URL = "https://центрконсалт.рф";
+const PAGES = {
+  home: `${SITE_URL}/`,
+  contacts: `${SITE_URL}/contacts/`,
+  licenses: `${SITE_URL}/licenzii/`,
+  medical: `${SITE_URL}/medicinskaya-licenziya/`,
+  education: `${SITE_URL}/obrazovatelnaya-licenziya/`,
+  sro: `${SITE_URL}/vstuplenie-v-sro1/`,
+  sroBuild: `${SITE_URL}/sro-stroitelstvo/`,
+  readyCompany: `${SITE_URL}/gotovy-firmy-s-sro/`
+};
+const submission = (at, source, phone, page, fields = []) => ({
+  at, source, phone, page,
+  fields: [{ label: "Телефон", value: phone }, ...fields.map(([label, value]) => ({ label, value }))]
+});
+
 const INITIAL_DEVICES = [
   {
     id: "device-01", fingerprint: "a7c4e92f81b6d305", status: "active",
     events: [
-      { at: "2026-11-10T16:42:00+03:00", source: "callback", callbackPhone: "+7 (000) 241-83-17", page: "Страница консультации" },
-      { at: "2026-11-10T16:39:00+03:00", source: "form", formPhone: "+7 (000) 241-83-17", page: "Форма обратной связи" },
-      { at: "2026-11-10T16:31:00+03:00", source: "form", formPhone: "+7 (000) 241-83-17", page: "Страница услуг" },
-      { at: "2026-11-10T16:22:00+03:00", source: "callback", callbackPhone: "+7 (000) 241-83-17", page: "Страница консультации" }
+      submission("2026-11-10T16:42:00+03:00", "callback", "+7 (000) 241-83-17", PAGES.contacts),
+      submission("2026-11-10T16:39:00+03:00", "form", "+7 (000) 241-83-17", PAGES.medical, [
+        ["Имя", "Александр М."], ["Email", "alexander@example.test"], ["Компания", "ООО «Пример Север»"],
+        ["Город", "Москва"], ["Услуга", "Медицинская лицензия"], ["Форма собственности", "ООО"],
+        ["Количество сотрудников", "12"], ["Удобное время звонка", "После 17:00"],
+        ["Комментарий", "Нужна консультация по документам"]
+      ]),
+      submission("2026-11-10T16:31:00+03:00", "form", "+7 (000) 241-83-17", PAGES.licenses, [
+        ["Имя", "Александр М."], ["Услуга", "Лицензирование"], ["Комментарий", "Уточнить список документов"]
+      ]),
+      submission("2026-11-10T16:22:00+03:00", "callback", "+7 (000) 241-83-17", PAGES.home)
     ]
   },
   {
     id: "device-02", fingerprint: "5d8b13a4f90c72e6", status: "active",
     events: [
-      { at: "2026-11-10T16:18:00+03:00", source: "form", formPhone: "+7 (000) 518-20-64", page: "Форма обратной связи" },
-      { at: "2026-11-09T12:07:00+03:00", source: "callback", callbackPhone: "+7 (000) 518-20-64", page: "Страница услуг" }
+      submission("2026-11-10T16:18:00+03:00", "form", "+7 (000) 518-20-64", PAGES.sro, [
+        ["Имя", "Марина К."], ["Email", "marina@example.test"], ["Компания", "ООО «Пример Проект»"],
+        ["Город", "Тверь"], ["Комментарий", "Нужны условия вступления в СРО"]
+      ]),
+      submission("2026-11-09T12:07:00+03:00", "callback", "+7 (000) 518-20-64", PAGES.sro)
     ]
   },
   {
     id: "device-03", fingerprint: "e90f2d76b4a813c5", status: "blocked", blockReason: "Частые повторные заявки", blockComment: "Пять одинаковых обращений за короткое время.", blockedAt: "2026-11-10T15:58:00+03:00",
     events: [
-      { at: "2026-11-10T15:56:00+03:00", source: "callback", callbackPhone: "+7 (000) 390-44-18", page: "Страница консультации" },
-      { at: "2026-11-10T15:52:00+03:00", source: "form", formPhone: "+7 (000) 390-44-18", page: "Форма обратной связи" },
-      { at: "2026-11-10T15:49:00+03:00", source: "form", formPhone: "+7 (000) 390-44-18", page: "Форма обратной связи" },
-      { at: "2026-11-10T15:45:00+03:00", source: "callback", callbackPhone: "+7 (000) 390-44-18", page: "Страница услуг" },
-      { at: "2026-11-10T15:41:00+03:00", source: "form", formPhone: "+7 (000) 390-44-18", page: "Форма обратной связи" }
+      submission("2026-11-10T15:56:00+03:00", "callback", "+7 (000) 390-44-18", PAGES.home),
+      submission("2026-11-10T15:52:00+03:00", "form", "+7 (000) 390-44-18", PAGES.contacts, [
+        ["Имя", "Игорь"], ["Сообщение", "Перезвоните мне"]
+      ]),
+      submission("2026-11-10T15:49:00+03:00", "form", "+7 (000) 390-44-18", PAGES.contacts, [
+        ["Имя", "Игорь"], ["Сообщение", "Перезвоните мне"]
+      ]),
+      submission("2026-11-10T15:45:00+03:00", "callback", "+7 (000) 390-44-18", PAGES.licenses),
+      submission("2026-11-10T15:41:00+03:00", "form", "+7 (000) 390-44-18", PAGES.contacts, [
+        ["Имя", "Игорь"], ["Сообщение", "Перезвоните мне"]
+      ])
     ]
   },
   {
     id: "device-04", fingerprint: "c13a95b7e2d6408f", status: "active",
     events: [
-      { at: "2026-11-10T15:33:00+03:00", source: "callback", callbackPhone: "+7 (000) 624-71-35", page: "Страница консультации" }
+      submission("2026-11-10T15:33:00+03:00", "callback", "+7 (000) 624-71-35", PAGES.home)
     ]
   },
   {
     id: "device-05", fingerprint: "72fe0b8c641ad935", status: "active",
     events: [
-      { at: "2026-11-10T14:11:00+03:00", source: "form", formPhone: "+7 (000) 773-09-42", page: "Форма обратной связи" },
-      { at: "2026-11-10T13:47:00+03:00", source: "form", formPhone: "+7 (000) 773-09-42", page: "Страница услуг" },
-      { at: "2026-11-08T10:34:00+03:00", source: "callback", callbackPhone: "+7 (000) 773-09-42", page: "Страница консультации" }
+      submission("2026-11-10T14:11:00+03:00", "form", "+7 (000) 773-09-42", PAGES.education, [
+        ["Имя", "Елена Д."], ["Компания", "ООО «Пример Образование»"],
+        ["Email", "elena@example.test"], ["Комментарий", "Интересует образовательная лицензия"]
+      ]),
+      submission("2026-11-10T13:47:00+03:00", "form", "+7 (000) 773-09-42", PAGES.licenses, [
+        ["Имя", "Елена Д."], ["Услуга", "Образовательная лицензия"]
+      ]),
+      submission("2026-11-08T10:34:00+03:00", "callback", "+7 (000) 773-09-42", PAGES.education)
     ]
   },
   {
     id: "device-06", fingerprint: "b406c91e7a2d58f3", status: "blocked", blockReason: "Некорректные контактные данные", blockComment: "Повторяющиеся заявки с разными номерами.", blockedAt: "2026-11-10T13:40:00+03:00",
     events: [
-      { at: "2026-11-10T13:37:00+03:00", source: "form", formPhone: "+7 (000) 190-12-86", page: "Форма обратной связи" },
-      { at: "2026-11-10T13:30:00+03:00", source: "form", formPhone: "+7 (000) 190-12-85", page: "Форма обратной связи" },
-      { at: "2026-11-10T13:26:00+03:00", source: "callback", callbackPhone: "+7 (000) 190-12-84", page: "Страница консультации" }
+      submission("2026-11-10T13:37:00+03:00", "form", "+7 (000) 190-12-86", PAGES.contacts, [
+        ["Имя", "Павел"], ["Сообщение", "Нужна консультация"]
+      ]),
+      submission("2026-11-10T13:30:00+03:00", "form", "+7 (000) 190-12-85", PAGES.contacts, [
+        ["Имя", "Павел"], ["Сообщение", "Нужна консультация"]
+      ]),
+      submission("2026-11-10T13:26:00+03:00", "callback", "+7 (000) 190-12-84", PAGES.home)
     ]
   },
   {
     id: "device-07", fingerprint: "94d2a603f71b8ce5", status: "active",
     events: [
-      { at: "2026-11-10T11:24:00+03:00", source: "form", formPhone: "+7 (000) 845-36-20", page: "Форма обратной связи" }
+      submission("2026-11-10T11:24:00+03:00", "form", "+7 (000) 845-36-20", PAGES.sroBuild, [
+        ["Имя", "Наталья Р."], ["Компания", "ООО «Пример Строй»"],
+        ["Город", "Калуга"], ["Комментарий", "Нужно вступить в СРО строителей"]
+      ])
     ]
   },
   {
     id: "device-08", fingerprint: "f8a35d1c602e49b7", status: "active",
     events: [
-      { at: "2026-11-09T17:05:00+03:00", source: "callback", callbackPhone: "+7 (000) 406-58-91", page: "Страница консультации" },
-      { at: "2026-11-09T16:54:00+03:00", source: "form", formPhone: "+7 (000) 406-58-91", page: "Форма обратной связи" }
+      submission("2026-11-09T17:05:00+03:00", "callback", "+7 (000) 406-58-91", PAGES.contacts),
+      submission("2026-11-09T16:54:00+03:00", "form", "+7 (000) 406-58-91", PAGES.readyCompany, [
+        ["Имя", "Антон С."], ["Email", "anton@example.test"],
+        ["Комментарий", "Интересует готовая компания с СРО"]
+      ])
     ]
   }
 ];
@@ -67,13 +114,18 @@ const INITIAL_DEVICES = [
 const STORAGE_KEY = "centrconsalt-device-status-v1";
 const THEME_KEY = "centrconsalt-theme-v1";
 const dateFormatter = new Intl.DateTimeFormat("ru-RU", { timeZone: "Europe/Moscow", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-const timeFormatter = new Intl.DateTimeFormat("ru-RU", { timeZone: "Europe/Moscow", hour: "2-digit", minute: "2-digit" });
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const readStorage = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
 const writeStorage = (key, value) => { try { localStorage.setItem(key, value); } catch { /* Продолжить без сохранения. */ } };
 const removeStorage = (key) => { try { localStorage.removeItem(key); } catch { /* Нечего сбрасывать. */ } };
 const formatDate = (at) => dateFormatter.format(new Date(at));
-const formatTime = (at) => timeFormatter.format(new Date(at));
+const fieldValue = (value) => Array.isArray(value) ? value.join(", ") : typeof value === "boolean" ? (value ? "Да" : "Нет") : String(value ?? "—");
+const safePageUrl = (value) => {
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : null;
+  } catch { return null; }
+};
 
 function loadOverrides() {
   try {
@@ -98,8 +150,8 @@ function getDevices() {
     .sort((a, b) => Date.parse(b.events[0].at) - Date.parse(a.events[0].at));
 }
 
-function getLatestPhone(device, field) {
-  return device.events.find((event) => event[field])?.[field] || null;
+function getLatestPhone(device) {
+  return device.events.find((event) => event.phone)?.phone || null;
 }
 
 function filteredDevices() {
@@ -108,7 +160,7 @@ function filteredDevices() {
   return getDevices().filter((device) => {
     if (currentFilter !== "all" && device.status !== currentFilter) return false;
     if (!query) return true;
-    const phones = device.events.flatMap((event) => [event.formPhone, event.callbackPhone]).filter(Boolean);
+    const phones = device.events.map((event) => event.phone).filter(Boolean);
     return device.fingerprint.toLowerCase().includes(query)
       || phones.some((phone) => phone.toLowerCase().includes(query) || (compactQuery && phone.replace(/\D/g, "").includes(compactQuery)));
   });
@@ -129,14 +181,12 @@ function renderRows(devices) {
   const tbody = $("#deviceRows");
   tbody.innerHTML = devices.map((device) => {
     const latest = device.events[0];
-    const formPhone = getLatestPhone(device, "formPhone");
-    const callbackPhone = getLatestPhone(device, "callbackPhone");
+    const phone = getLatestPhone(device);
     const selected = selectedId === device.id;
     return `<tr data-device-id="${device.id}" tabindex="0" aria-selected="${selected}" class="${selected ? "is-selected" : ""}">
-      <td data-label="Последнее обращение"><span class="cell-primary">${formatDate(latest.at)}</span><span class="cell-secondary">${latest.source === "form" ? "Форма обратной связи" : "Автодозвон"}</span></td>
+      <td data-label="Последнее обращение"><span class="cell-primary">${formatDate(latest.at)}</span><span class="cell-secondary">${latest.source === "form" ? "Форма обратной связи" : "Запрос на звонок"}</span></td>
       <td data-label="Слепок устройства"><span class="fingerprint">${escapeHTML(device.fingerprint)}</span></td>
-      <td data-label="Телефон из формы">${formPhone ? escapeHTML(formPhone) : '<span class="muted-dash">—</span>'}</td>
-      <td data-label="Автодозвон">${callbackPhone ? escapeHTML(callbackPhone) : '<span class="muted-dash">—</span>'}</td>
+      <td data-label="Телефон">${phone ? escapeHTML(phone) : '<span class="muted-dash">—</span>'}</td>
       <td class="count-cell" data-label="Заявок">${device.events.length}</td>
       <td data-label="Статус"><span class="status ${device.status}">${device.status === "blocked" ? "Заблокировано" : "Активно"}</span></td>
     </tr>`;
@@ -152,12 +202,16 @@ function renderDetail(device) {
     return;
   }
   const blocked = device.status === "blocked";
-  const history = device.events.map((event) => `<div class="history-item">
-    <div class="history-item-top"><strong>${event.source === "form" ? "Форма обратной связи" : "Автодозвон"}</strong><time datetime="${escapeHTML(event.at)}">${formatDate(event.at)}</time></div>
-    ${event.formPhone ? `<p>Телефон из формы: <b>${escapeHTML(event.formPhone)}</b></p>` : ""}
-    ${event.callbackPhone ? `<p>Номер автодозвона: <b>${escapeHTML(event.callbackPhone)}</b></p>` : ""}
-    <p>${escapeHTML(event.page)}</p>
-  </div>`).join("");
+  const history = device.events.map((event) => {
+    const pageUrl = safePageUrl(event.page);
+    const fields = event.fields || [];
+    return `<div class="history-item">
+      <div class="history-item-top"><strong>${event.source === "form" ? "Форма обратной связи" : "Запрос на звонок"}</strong><time datetime="${escapeHTML(event.at)}">${formatDate(event.at)}</time></div>
+      <p>Телефон: <b>${escapeHTML(event.phone)}</b></p>
+      <p class="history-page">Страница отправки: ${pageUrl ? `<a href="${escapeHTML(pageUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(event.page)}</a>` : escapeHTML(event.page)}</p>
+      <details class="history-fields"><summary>Все поля заявки (${fields.length})</summary><dl>${fields.map((field) => `<div><dt>${escapeHTML(field.label)}</dt><dd>${escapeHTML(fieldValue(field.value))}</dd></div>`).join("")}</dl></details>
+    </div>`;
+  }).join("");
   container.innerHTML = `<div class="detail-header"><h2>Устройство</h2><span class="status ${device.status}">${blocked ? "Заблокировано" : "Активно"}</span></div>
     <div class="detail-summary">
       <div class="detail-block"><span class="detail-label">Цифровой слепок устройства</span><div class="detail-fingerprint"><code>${escapeHTML(device.fingerprint)}</code><button class="copy-button" type="button" data-copy-fingerprint="${escapeHTML(device.fingerprint)}" aria-label="Скопировать слепок">Копировать</button></div><p class="detail-explain">Используйте слепок, чтобы проверить историю обращений устройства. IP-адрес не служит основанием для блокировки.</p>
