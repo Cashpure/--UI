@@ -140,13 +140,13 @@ h1 { margin: 0; font-size: clamp(25px, 2.4vw, 33px); line-height: 1.15; letter-s
 .history-item.line-green { border-left-color: var(--green); }
 .history-item.line-break { border-left-color: transparent; }
 .history-item:last-child { padding-bottom: 0; border-left-color: transparent; }
-.history-item::before { position: absolute; top: 3px; left: -5px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); content: ""; }
+.history-item::before { position: absolute; top: 0; left: -5px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); content: ""; }
 .history-item.is-block-event::before, .history-item.is-rejected::before { background: var(--timeline-red); }
 .history-item.is-unblock-event::before { background: var(--green); }
 .history-item.is-block-event .history-item-top strong, .history-item.is-rejected .history-item-top strong { color: var(--timeline-red); }
 .history-item.is-unblock-event .history-item-top strong { color: var(--green); }
 .history-item-top { display: flex; justify-content: space-between; gap: 8px; }
-.history-item-top strong { color: var(--text); font-size: 12px; }
+.history-item-top strong { color: var(--text); font-size: 12px; line-height: 8px; }
 .history-item-top time { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
 .history-title { display: grid; gap: 3px; }
 .history-result { color: var(--timeline-red); font-size: 10px; font-weight: 650; }
