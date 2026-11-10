@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="description" content="Интерфейс отдела продаж ЦентрКонсалт для просмотра заявок и управления блокировками устройств." />
+    <title>Устройства и заявки — ЦентрКонсалт</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body data-theme="dark">
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Навигация">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">ЦК</span>
+          <span class="brand-copy"><strong>ЦентрКонсалт</strong><small>Отдел продаж</small></span>
+        </div>
+
+        <div class="sidebar-group-label">Рабочее пространство</div>
+        <nav class="navigation" aria-label="Разделы">
+          <button class="nav-item is-current" type="button" data-view-button="devices" aria-current="page">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 10h17M9 10v10"/></svg>
+            <span>Устройства и заявки</span>
+          </button>
+          <button class="nav-item" type="button" data-view-button="visitor">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+            <span>Экран посетителя</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <button id="resetChanges" class="text-button" type="button">Сбросить изменения</button>
+        </div>
+      </aside>
+
+      <div class="main-area">
+        <header class="topbar">
+          <div class="topbar-path">Отдел продаж <span>/</span> <strong id="currentSection">Устройства и заявки</strong></div>
+          <div class="topbar-actions">
+            <button id="themeToggle" class="theme-button" type="button" aria-label="Включить светлую тему" aria-pressed="false">
+              <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg>
+              <span id="themeLabel">Светлая тема</span>
+            </button>
+          </div>
+        </header>
+
+        <main>
+          <section id="devicesView" class="view page-content" aria-labelledby="devicesTitle">
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">Контроль заявок</p>
+                <h1 id="devicesTitle">Устройства и заявки</h1>
+                <p class="page-subtitle">Проверьте историю обращений, прежде чем ограничить устройство.</p>
+              </div>
+            </div>
+
+            <div class="stats-grid" id="statsGrid" aria-label="Сводка"></div>
+
+            <div class="workspace-grid">
+              <section class="panel list-panel" aria-labelledby="listTitle">
+                <div class="panel-heading">
+                  <div><h2 id="listTitle">Список устройств</h2><p>Новые обращения находятся сверху</p></div>
+                  <span id="resultCount" class="count-pill"></span>
+                </div>
+                <div class="list-toolbar">
+                  <div class="filter-tabs" role="group" aria-label="Фильтр по статусу">
+                    <button class="filter-tab is-active" type="button" data-filter="all" aria-pressed="true">Все</button>
+                    <button class="filter-tab" type="button" data-filter="active" aria-pressed="false">Активные</button>
+                    <button class="filter-tab" type="button" data-filter="blocked" aria-pressed="false">Заблокированные</button>
+                  </div>
+                  <label class="search-field">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.6"/><path d="m16 16 4.3 4.3"/></svg>
+                    <input id="deviceSearch" type="search" autocomplete="off" placeholder="Телефон или слепок" aria-label="Поиск по телефону или слепку устройства" />
+                  </label>
+                </div>
+                <div class="table-scroll">
+                  <table class="device-table">
+                    <thead><tr><th scope="col">Последнее обращение</th><th scope="col">Слепок устройства</th><th scope="col">Телефон из формы</th><th scope="col">Автодозвон</th><th scope="col">Заявок</th><th scope="col">Статус</th></tr></thead>
+                    <tbody id="deviceRows"></tbody>
+                  </table>
+                </div>
+                <div id="emptyState" class="empty-state" hidden><strong>Ничего не найдено</strong><span>Попробуйте другой телефон, слепок или фильтр.</span></div>
+                <div class="table-footer">Нажмите на строку, чтобы посмотреть историю устройства</div>
+              </section>
+
+              <section class="panel detail-panel" id="deviceDetail" aria-label="Подробности устройства"></section>
+            </div>
+          </section>
+
+          <section id="visitorView" class="view page-content" aria-labelledby="visitorTitle" hidden>
+            <div class="page-heading visitor-heading">
+              <div><p class="eyebrow">Сценарий блокировки</p><h1 id="visitorTitle">Что увидит посетитель</h1><p class="page-subtitle">Предупреждение и форма обращения для посетителя.</p></div>
+            </div>
+            <div class="preview-layout">
+              <div class="preview-context panel">
+                <span class="preview-tag">Экран посетителя</span>
+                <h2>Понятное предупреждение вместо молчаливого отказа</h2>
+                <p>При блокировке посетитель видит причину отказа и может оставить сообщение, если ограничение сработало по ошибке.</p>
+                <div class="preview-flow"><span>1 <b>Проверка устройства</b></span><span>2 <b>Предупреждение</b></span><span>3 <b>Сообщение клиента</b></span></div>
+              </div>
+              <div class="site-preview" aria-label="Страница для заблокированного посетителя">
+                <div class="site-preview-header"><span class="site-preview-logo">Центр<span>Консалт</span></span><span>Консультации для бизнеса</span></div>
+                <div class="site-preview-content">
+                  <div class="warning-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 17h.01"/><path d="M10.3 3.9a2 2 0 0 1 3.4 0l7.8 13.3a2 2 0 0 1-1.7 3H4.2a2 2 0 0 1-1.7-3z"/></svg></div>
+                  <p class="preview-kicker">Запрос на обратный звонок</p>
+                  <h2>Заявка на звонок не отправлена</h2>
+                  <p class="warning-copy">Мы заметили подозрительную активность с вашего устройства и временно ограничили отправку заявок. Если это ошибка, напишите нам — сотрудник сможет разобраться в ситуации.</p>
+                  <form id="visitorForm" class="visitor-form">
+                    <h3>Написать сообщение</h3>
+                    <p>Расскажите, как с вами связаться и что произошло.</p>
+                    <label>Как с вами связаться<input id="visitorContact" name="contact" type="text" autocomplete="off" placeholder="Телефон или email" required /></label>
+                    <label>Сообщение<textarea id="visitorMessage" name="message" rows="4" placeholder="Опишите ваш вопрос" required></textarea></label>
+                    <button class="primary-button visitor-submit" type="submit">Отправить сообщение <span aria-hidden="true">↗</span></button>
+                    <div id="visitorFormFeedback" class="form-feedback" role="status" hidden></div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div id="modalBackdrop" class="modal-backdrop" hidden>
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDescription">
+        <div class="dialog-icon" id="modalIcon" aria-hidden="true"></div>
+        <h2 id="modalTitle"></h2>
+        <p id="modalDescription"></p>
+        <form id="actionForm">
+          <div id="reasonFields" class="reason-fields">
+            <label for="blockReason">Причина блокировки</label>
+            <select id="blockReason" name="reason">
+              <option value="Частые повторные заявки">Частые повторные заявки</option>
+              <option value="Некорректные контактные данные">Некорректные контактные данные</option>
+              <option value="Другая причина">Другая причина</option>
+            </select>
+            <label for="reasonComment">Комментарий <span>(необязательно)</span></label>
+            <textarea id="reasonComment" name="comment" rows="3" placeholder="Например, несколько одинаковых заявок за короткое время"></textarea>
+          </div>
+          <div class="dialog-actions"><button id="cancelAction" class="secondary-button" type="button">Отмена</button><button id="confirmAction" class="primary-button" type="submit"></button></div>
+        </form>
+      </div>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
