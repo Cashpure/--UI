@@ -162,6 +162,8 @@ function loadOverrides() {
 let overrides = loadOverrides();
 let selectedId = INITIAL_DEVICES[0].id;
 let currentFilter = "all";
+let deviceSort = "newest";
+let historySort = "newest";
 let pendingAction = null;
 let modalReturnFocus = null;
 let toastTimer;
@@ -171,7 +173,10 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 function getDevices() {
   return INITIAL_DEVICES.map((device) => ({ ...device, ...(overrides[device.id] || {}) }))
-    .sort((a, b) => Date.parse(b.events[0].at) - Date.parse(a.events[0].at));
+    .sort((a, b) => {
+      const difference = Date.parse(b.events[0].at) - Date.parse(a.events[0].at);
+      return deviceSort === "newest" ? difference : -difference;
+    });
 }
 
 function getTimeline(device) {
@@ -215,7 +220,16 @@ function renderRows(devices) {
     </tr>`;
   }).join("");
   $("#emptyState").hidden = devices.length !== 0;
-  $("#resultCount").textContent = `${devices.length} из ${INITIAL_DEVICES.length}`;
+}
+
+function timelineLineClass(item, next) {
+  if (!next) return "";
+  const earlier = historySort === "oldest" ? item : next;
+  const later = historySort === "oldest" ? next : item;
+  if (later.kind === "block" || later.kind === "unblock") return "line-break";
+  if (earlier.kind === "block" || (earlier.kind === "request" && earlier.result === "blocked")) return "line-red";
+  if (earlier.kind === "unblock") return "line-green";
+  return "";
 }
 
 function renderDetail(device) {
@@ -226,11 +240,12 @@ function renderDetail(device) {
   }
   const blocked = device.status === "blocked";
   const timeline = getTimeline(device);
-  const history = timeline.map((item, index) => {
-    const next = timeline[index + 1];
+  const visibleTimeline = historySort === "newest" ? [...timeline].reverse() : timeline;
+  const history = visibleTimeline.map((item, index) => {
+    const next = visibleTimeline[index + 1];
     const rejected = item.kind === "request" && item.result === "blocked";
     const itemClass = item.kind === "block" ? "is-block-event" : item.kind === "unblock" ? "is-unblock-event" : rejected ? "is-rejected" : "";
-    const lineClass = next && (next.kind === "block" || next.kind === "unblock") ? "line-break" : next && (item.kind === "block" || rejected) ? "line-red" : next && item.kind === "unblock" ? "line-green" : "";
+    const lineClass = timelineLineClass(item, next);
     if (item.kind !== "request") {
       return `<div class="history-item ${itemClass} ${lineClass}">
         <div class="history-item-top"><strong>${item.kind === "block" ? "Устройство заблокировано" : "Устройство разблокировано"}</strong><time datetime="${escapeHTML(item.at)}">${formatDate(item.at)}</time></div>
@@ -248,7 +263,12 @@ function renderDetail(device) {
   }).join("");
   container.innerHTML = `<div class="detail-header"><h2>Устройство</h2><span class="status ${device.status}">${blocked ? "Заблокировано" : "Активно"}</span></div>
     <div class="detail-actions"><button class="${blocked ? "primary-button" : "secondary-button block"} action-button" type="button" data-action="${blocked ? "unblock" : "block"}">${blocked ? "Разблокировать устройство" : "Заблокировать устройство"}</button></div>
-    <div class="detail-history"><div class="history-heading"><h3>История устройства</h3><span>${timeline.length} ${pluralize(timeline.length, "событие", "события", "событий")}</span></div><p class="history-order">Сначала ранние события</p><div class="history-list">${history}</div></div>`;
+    <div class="detail-history"><div class="history-heading"><h3>История устройства</h3><span>${timeline.length} ${pluralize(timeline.length, "событие", "события", "событий")}</span></div>
+      <details class="sort-control history-sort" id="historySortControl">
+        <summary aria-label="Порядок истории"><svg class="sort-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span>${historySort === "newest" ? "От новых к старым" : "От старых к новым"}</span><svg class="sort-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></summary>
+        <div class="sort-options" aria-label="Порядок истории"><button type="button" data-history-sort="newest" aria-pressed="${historySort === "newest"}">От новых к старым</button><button type="button" data-history-sort="oldest" aria-pressed="${historySort === "oldest"}">От старых к новым</button></div>
+      </details>
+      <div class="history-list">${history}</div></div>`;
 }
 
 function pluralize(number, one, few, many) {
@@ -341,19 +361,46 @@ function applyAction(event) {
     });
   }
   render();
-  $("#deviceDetail .history-item:last-child")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  $(historySort === "newest" ? "#deviceDetail .history-item:first-child" : "#deviceDetail .history-item:last-child")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 $("#themeToggle").addEventListener("click", () => setTheme(document.body.dataset.theme === "dark" ? "light" : "dark"));
+$("#deviceSortControl").addEventListener("click", (event) => {
+  const option = event.target.closest("[data-device-sort]");
+  if (!option) return;
+  deviceSort = option.dataset.deviceSort;
+  $("#deviceSortLabel").textContent = option.textContent;
+  $$('[data-device-sort]').forEach((button) => button.setAttribute("aria-pressed", String(button === option)));
+  $("#deviceSortControl").open = false;
+  render();
+  $("#deviceSortControl summary").focus();
+});
 $("#resetChanges").addEventListener("click", () => { overrides = {}; removeStorage(STORAGE_KEY); currentFilter = "all"; $("#deviceSearch").value = ""; selectedId = INITIAL_DEVICES[0].id; $$("[data-filter]").forEach((button) => { const active = button.dataset.filter === "all"; button.classList.toggle("is-active", active); button.setAttribute("aria-pressed", String(active)); }); render(); showToast("Исходные статусы восстановлены"); });
 $$("[data-filter]").forEach((button) => button.addEventListener("click", () => { currentFilter = button.dataset.filter; $$("[data-filter]").forEach((item) => { const active = item === button; item.classList.toggle("is-active", active); item.setAttribute("aria-pressed", String(active)); }); render(); }));
 $("#deviceSearch").addEventListener("input", render);
 $("#deviceRows").addEventListener("click", (event) => { const row = event.target.closest("tr[data-device-id]"); if (row) { selectedId = row.dataset.deviceId; render(); } });
 $("#deviceRows").addEventListener("keydown", (event) => { if (event.key !== "Enter" && event.key !== " ") return; const row = event.target.closest("tr[data-device-id]"); if (row) { event.preventDefault(); selectedId = row.dataset.deviceId; render(); $("#deviceDetail").scrollIntoView({ block: "nearest", behavior: "smooth" }); } });
-$("#deviceDetail").addEventListener("click", (event) => { const action = event.target.closest("[data-action]"); if (action) openModal(action.dataset.action); });
+$("#deviceDetail").addEventListener("click", (event) => {
+  const sortOption = event.target.closest("[data-history-sort]");
+  if (sortOption) {
+    historySort = sortOption.dataset.historySort;
+    renderDetail(getDevices().find((device) => device.id === selectedId));
+    $("#historySortControl summary").focus();
+    return;
+  }
+  const action = event.target.closest("[data-action]");
+  if (action) openModal(action.dataset.action);
+});
 $("#cancelAction").addEventListener("click", closeModal);
 $("#modalBackdrop").addEventListener("click", (event) => { if (event.target.id === "modalBackdrop") closeModal(); });
 $("#actionForm").addEventListener("submit", applyAction);
-document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !$("#modalBackdrop").hidden) closeModal(); });
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".sort-control")) $$(".sort-control[open]").forEach((control) => { control.open = false; });
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (!$("#modalBackdrop").hidden) closeModal();
+  $$(".sort-control[open]").forEach((control) => { control.open = false; });
+});
 setTheme(readStorage(THEME_KEY) === "light" ? "light" : "dark");
 render();

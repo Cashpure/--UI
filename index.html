@@ -34,8 +34,18 @@
             <div class="workspace-grid">
               <section class="panel list-panel" aria-labelledby="listTitle">
                 <div class="panel-heading">
-                  <div><h2 id="listTitle">Список устройств</h2><p>Новые обращения находятся сверху</p></div>
-                  <span id="resultCount" class="count-pill"></span>
+                  <div><h2 id="listTitle">Список устройств</h2><p>По времени последнего обращения</p></div>
+                  <details class="sort-control" id="deviceSortControl">
+                    <summary aria-label="Порядок устройств">
+                      <svg class="sort-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+                      <span id="deviceSortLabel">От новых к старым</span>
+                      <svg class="sort-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+                    </summary>
+                    <div class="sort-options" aria-label="Порядок устройств">
+                      <button type="button" data-device-sort="newest" aria-pressed="true">От новых к старым</button>
+                      <button type="button" data-device-sort="oldest" aria-pressed="false">От старых к новым</button>
+                    </div>
+                  </details>
                 </div>
                 <div class="list-toolbar">
                   <div class="filter-tabs" role="group" aria-label="Фильтр по статусу">
