@@ -247,10 +247,7 @@ function renderDetail(device) {
     </div>`;
   }).join("");
   container.innerHTML = `<div class="detail-header"><h2>Устройство</h2><span class="status ${device.status}">${blocked ? "Заблокировано" : "Активно"}</span></div>
-    <div class="detail-controls">
-      <div class="detail-identity"><span class="detail-label">Цифровой слепок</span><div class="detail-fingerprint"><code>${escapeHTML(device.fingerprint)}</code><button class="copy-button" type="button" data-copy-fingerprint="${escapeHTML(device.fingerprint)}" aria-label="Скопировать слепок">Копировать</button></div></div>
-      <div class="detail-actions"><button class="${blocked ? "primary-button" : "secondary-button block"} action-button" type="button" data-action="${blocked ? "unblock" : "block"}">${blocked ? "Разблокировать устройство" : "Заблокировать устройство"}</button></div>
-    </div>
+    <div class="detail-actions"><button class="${blocked ? "primary-button" : "secondary-button block"} action-button" type="button" data-action="${blocked ? "unblock" : "block"}">${blocked ? "Разблокировать устройство" : "Заблокировать устройство"}</button></div>
     <div class="detail-history"><div class="history-heading"><h3>История устройства</h3><span>${timeline.length} ${pluralize(timeline.length, "событие", "события", "событий")}</span></div><p class="history-order">Сначала ранние события</p><div class="history-list">${history}</div></div>`;
 }
 
@@ -347,30 +344,13 @@ function applyAction(event) {
   $("#deviceDetail .history-item:last-child")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
-async function copyFingerprint(value) {
-  try {
-    await navigator.clipboard.writeText(value);
-    showToast("Слепок скопирован");
-  } catch {
-    const textarea = document.createElement("textarea");
-    textarea.value = value;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.append(textarea);
-    textarea.select();
-    const copied = document.execCommand("copy");
-    textarea.remove();
-    showToast(copied ? "Слепок скопирован" : "Не удалось скопировать слепок");
-  }
-}
-
 $("#themeToggle").addEventListener("click", () => setTheme(document.body.dataset.theme === "dark" ? "light" : "dark"));
 $("#resetChanges").addEventListener("click", () => { overrides = {}; removeStorage(STORAGE_KEY); currentFilter = "all"; $("#deviceSearch").value = ""; selectedId = INITIAL_DEVICES[0].id; $$("[data-filter]").forEach((button) => { const active = button.dataset.filter === "all"; button.classList.toggle("is-active", active); button.setAttribute("aria-pressed", String(active)); }); render(); showToast("Исходные статусы восстановлены"); });
 $$("[data-filter]").forEach((button) => button.addEventListener("click", () => { currentFilter = button.dataset.filter; $$("[data-filter]").forEach((item) => { const active = item === button; item.classList.toggle("is-active", active); item.setAttribute("aria-pressed", String(active)); }); render(); }));
 $("#deviceSearch").addEventListener("input", render);
 $("#deviceRows").addEventListener("click", (event) => { const row = event.target.closest("tr[data-device-id]"); if (row) { selectedId = row.dataset.deviceId; render(); } });
 $("#deviceRows").addEventListener("keydown", (event) => { if (event.key !== "Enter" && event.key !== " ") return; const row = event.target.closest("tr[data-device-id]"); if (row) { event.preventDefault(); selectedId = row.dataset.deviceId; render(); $("#deviceDetail").scrollIntoView({ block: "nearest", behavior: "smooth" }); } });
-$("#deviceDetail").addEventListener("click", (event) => { const action = event.target.closest("[data-action]"); const copy = event.target.closest("[data-copy-fingerprint]"); if (action) openModal(action.dataset.action); if (copy) copyFingerprint(copy.dataset.copyFingerprint); });
+$("#deviceDetail").addEventListener("click", (event) => { const action = event.target.closest("[data-action]"); if (action) openModal(action.dataset.action); });
 $("#cancelAction").addEventListener("click", closeModal);
 $("#modalBackdrop").addEventListener("click", (event) => { if (event.target.id === "modalBackdrop") closeModal(); });
 $("#actionForm").addEventListener("submit", applyAction);
