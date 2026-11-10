@@ -11,8 +11,8 @@ const PAGES = {
   sroBuild: `${SITE_URL}/sro-stroitelstvo/`,
   readyCompany: `${SITE_URL}/gotovy-firmy-s-sro/`
 };
-const submission = (at, source, phone, page, fields = []) => ({
-  at, source, phone, page,
+const submission = (at, source, phone, page, fields = [], result = "sent") => ({
+  at, source, phone, page, result,
   fields: [{ label: "Телефон", value: phone }, ...fields.map(([label, value]) => ({ label, value }))]
 });
 
@@ -46,6 +46,10 @@ const INITIAL_DEVICES = [
   {
     id: "device-03", fingerprint: "e90f2d76b4a813c5", status: "blocked", blockReason: "Частые повторные заявки", blockComment: "Пять одинаковых обращений за короткое время.", blockedAt: "2026-11-10T15:58:00+03:00",
     events: [
+      submission("2026-11-10T16:11:00+03:00", "form", "+7 (000) 390-44-18", PAGES.contacts, [
+        ["Имя", "Игорь"], ["Сообщение", "Перезвоните мне"]
+      ], "blocked"),
+      submission("2026-11-10T16:04:00+03:00", "callback", "+7 (000) 390-44-18", PAGES.home, [], "blocked"),
       submission("2026-11-10T15:56:00+03:00", "callback", "+7 (000) 390-44-18", PAGES.home),
       submission("2026-11-10T15:52:00+03:00", "form", "+7 (000) 390-44-18", PAGES.contacts, [
         ["Имя", "Игорь"], ["Сообщение", "Перезвоните мне"]
@@ -81,6 +85,10 @@ const INITIAL_DEVICES = [
   {
     id: "device-06", fingerprint: "b406c91e7a2d58f3", status: "blocked", blockReason: "Некорректные контактные данные", blockComment: "Повторяющиеся заявки с разными номерами.", blockedAt: "2026-11-10T13:40:00+03:00",
     events: [
+      submission("2026-11-10T13:50:00+03:00", "form", "+7 (000) 190-12-87", PAGES.contacts, [
+        ["Имя", "Павел"], ["Сообщение", "Нужна консультация"]
+      ], "blocked"),
+      submission("2026-11-10T13:44:00+03:00", "callback", "+7 (000) 190-12-86", PAGES.home, [], "blocked"),
       submission("2026-11-10T13:37:00+03:00", "form", "+7 (000) 190-12-86", PAGES.contacts, [
         ["Имя", "Павел"], ["Сообщение", "Нужна консультация"]
       ]),
@@ -130,7 +138,24 @@ const safePageUrl = (value) => {
 function loadOverrides() {
   try {
     const parsed = JSON.parse(readStorage(STORAGE_KEY) || "{}");
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    let migrated = false;
+    for (const [id, change] of Object.entries(parsed)) {
+      if (!change || typeof change !== "object" || Array.isArray(change) || Array.isArray(change.actions)) continue;
+      const initial = INITIAL_DEVICES.find((device) => device.id === id);
+      change.actions = [];
+      if (initial && change.status && change.status !== initial.status) {
+        change.actions.push({
+          kind: change.status === "blocked" ? "block" : "unblock",
+          at: change.blockedAt || new Date().toISOString(),
+          reason: change.blockReason || null,
+          comment: change.blockComment || null
+        });
+      }
+      migrated = true;
+    }
+    if (migrated) writeStorage(STORAGE_KEY, JSON.stringify(parsed));
+    return parsed;
   } catch { return {}; }
 }
 
@@ -148,6 +173,16 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 function getDevices() {
   return INITIAL_DEVICES.map((device) => ({ ...device, ...(overrides[device.id] || {}) }))
     .sort((a, b) => Date.parse(b.events[0].at) - Date.parse(a.events[0].at));
+}
+
+function getTimeline(device) {
+  const initial = INITIAL_DEVICES.find((item) => item.id === device.id);
+  const initialBlock = initial?.blockedAt ? [{ kind: "block", at: initial.blockedAt, reason: initial.blockReason, comment: initial.blockComment }] : [];
+  return [
+    ...device.events.map((event) => ({ ...event, kind: "request" })),
+    ...initialBlock,
+    ...(Array.isArray(device.actions) ? device.actions : [])
+  ].sort((a, b) => Date.parse(a.at) - Date.parse(b.at) || (a.kind === "request" ? -1 : 1));
 }
 
 function getLatestPhone(device) {
@@ -171,7 +206,7 @@ function renderStats(devices) {
   const blocked = devices.filter((device) => device.status === "blocked").length;
   const items = [
     ["Устройств", devices.length, "в списке", '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/>'],
-    ["Обращений", events, "в истории", '<path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/>'],
+    ["Обращений", events, "запросов", '<path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/>'],
     ["Заблокировано", blocked, "устройств", '<path d="M12 3 4 6v5c0 5 3.4 8 8 10 4.6-2 8-5 8-10V6zM9 12l2 2 4-4"/>']
   ];
   $("#statsGrid").innerHTML = items.map(([label, value, hint, icon]) => `<div class="stat-card"><div class="stat-top"><span>${label}</span><span class="stat-icon"><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg></span></div><strong>${value}<span class="stat-hint">${hint}</span></strong></div>`).join("");
@@ -184,7 +219,7 @@ function renderRows(devices) {
     const phone = getLatestPhone(device);
     const selected = selectedId === device.id;
     return `<tr data-device-id="${device.id}" tabindex="0" aria-selected="${selected}" class="${selected ? "is-selected" : ""}">
-      <td data-label="Последнее обращение"><span class="cell-primary">${formatDate(latest.at)}</span><span class="cell-secondary">${latest.source === "form" ? "Форма обратной связи" : "Запрос на звонок"}</span></td>
+      <td data-label="Последнее обращение"><span class="cell-primary">${formatDate(latest.at)}</span><span class="cell-secondary">${latest.source === "form" ? "Форма обратной связи" : "Запрос на звонок"}${latest.result === "blocked" ? " · не отправлена" : ""}</span></td>
       <td data-label="Слепок устройства"><span class="fingerprint">${escapeHTML(device.fingerprint)}</span></td>
       <td data-label="Телефон">${phone ? escapeHTML(phone) : '<span class="muted-dash">—</span>'}</td>
       <td class="count-cell" data-label="Заявок">${device.events.length}</td>
@@ -202,13 +237,24 @@ function renderDetail(device) {
     return;
   }
   const blocked = device.status === "blocked";
-  const history = device.events.map((event) => {
-    const pageUrl = safePageUrl(event.page);
-    const fields = event.fields || [];
-    return `<div class="history-item">
-      <div class="history-item-top"><strong>${event.source === "form" ? "Форма обратной связи" : "Запрос на звонок"}</strong><time datetime="${escapeHTML(event.at)}">${formatDate(event.at)}</time></div>
-      <p>Телефон: <b>${escapeHTML(event.phone)}</b></p>
-      <p class="history-page">Страница отправки: ${pageUrl ? `<a href="${escapeHTML(pageUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(event.page)}</a>` : escapeHTML(event.page)}</p>
+  const timeline = getTimeline(device);
+  const history = timeline.map((item, index) => {
+    const next = timeline[index + 1];
+    const rejected = item.kind === "request" && item.result === "blocked";
+    const itemClass = item.kind === "block" ? "is-block-event" : item.kind === "unblock" ? "is-unblock-event" : rejected ? "is-rejected" : "";
+    const lineClass = next && (next.kind === "block" || item.kind === "block" || rejected) ? "line-red" : next && item.kind === "unblock" ? "line-green" : "";
+    if (item.kind !== "request") {
+      return `<div class="history-item ${itemClass} ${lineClass}">
+        <div class="history-item-top"><strong>${item.kind === "block" ? "Устройство заблокировано" : "Устройство разблокировано"}</strong><time datetime="${escapeHTML(item.at)}">${formatDate(item.at)}</time></div>
+        ${item.kind === "block" ? `<p>Причина: <b>${escapeHTML(item.reason || "Подозрительная активность")}</b></p>${item.comment ? `<p>${escapeHTML(item.comment)}</p>` : ""}` : ""}
+      </div>`;
+    }
+    const pageUrl = safePageUrl(item.page);
+    const fields = item.fields || [];
+    return `<div class="history-item ${itemClass} ${lineClass}">
+      <div class="history-item-top"><div class="history-title"><strong>${item.source === "form" ? "Форма обратной связи" : "Запрос на звонок"}</strong>${rejected ? '<span class="history-result">Не отправлена</span>' : ""}</div><time datetime="${escapeHTML(item.at)}">${formatDate(item.at)}</time></div>
+      <p>Телефон: <b>${escapeHTML(item.phone)}</b></p>
+      <p class="history-page">Страница отправки: ${pageUrl ? `<a href="${escapeHTML(pageUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(item.page)}</a>` : escapeHTML(item.page)}</p>
       <details class="history-fields"><summary>Все поля заявки (${fields.length})</summary><dl>${fields.map((field) => `<div><dt>${escapeHTML(field.label)}</dt><dd>${escapeHTML(fieldValue(field.value))}</dd></div>`).join("")}</dl></details>
     </div>`;
   }).join("");
@@ -220,7 +266,7 @@ function renderDetail(device) {
       </div>
       <div class="detail-actions"><button class="${blocked ? "primary-button" : "secondary-button block"} action-button" type="button" data-action="${blocked ? "unblock" : "block"}">${blocked ? "Разблокировать устройство" : "Заблокировать устройство"}</button><p class="action-hint">${blocked ? "Устройство снова получит статус «Активно»." : "Перед блокировкой проверьте номера и историю заявок."}</p></div>
     </div>
-    <div class="detail-block detail-history"><div class="history-heading"><h3>История заявок</h3><span>${device.events.length} ${pluralize(device.events.length, "обращение", "обращения", "обращений")}</span></div><div class="history-list">${history}</div></div>`;
+    <div class="detail-block detail-history"><div class="history-heading"><h3>История устройства</h3><span>${timeline.length} ${pluralize(timeline.length, "событие", "события", "событий")}</span></div><p class="history-order">Сначала ранние события</p><div class="history-list">${history}</div></div>`;
 }
 
 function pluralize(number, one, few, many) {
@@ -298,21 +344,37 @@ function closeModal() {
 function applyAction(event) {
   event.preventDefault();
   if (!pendingAction || !selectedId) return;
+  const current = overrides[selectedId] || {};
+  const at = new Date().toISOString();
+  const actions = Array.isArray(current.actions) ? current.actions : [];
   if (pendingAction === "block") {
+    const reason = $("#blockReason").value;
+    const comment = $("#reasonComment").value.trim().slice(0, 300);
     overrides[selectedId] = {
+      ...current,
       status: "blocked",
-      blockReason: $("#blockReason").value,
-      blockComment: $("#reasonComment").value.trim().slice(0, 300),
-      blockedAt: new Date().toISOString()
+      blockReason: reason,
+      blockComment: comment,
+      blockedAt: at,
+      actions: [...actions, { kind: "block", at, reason, comment }]
     };
     showToast("Устройство заблокировано");
   } else {
-    overrides[selectedId] = { status: "active", blockReason: null, blockComment: null, blockedAt: null };
+    overrides[selectedId] = { ...current, status: "active", blockReason: null, blockComment: null, blockedAt: null, actions: [...actions, { kind: "unblock", at }] };
     showToast("Устройство разблокировано");
   }
   writeStorage(STORAGE_KEY, JSON.stringify(overrides));
   closeModal();
+  if (currentFilter !== "all" && currentFilter !== overrides[selectedId].status) {
+    currentFilter = "all";
+    $$('[data-filter]').forEach((button) => {
+      const active = button.dataset.filter === "all";
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
   render();
+  $("#deviceDetail .history-item:last-child")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 async function copyFingerprint(value) {
